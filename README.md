@@ -1,4 +1,4 @@
-# djangoチュートリアル
+# django Startup Template
 
 ## 仮想環境
 
@@ -177,4 +177,118 @@ Webサーバー開始
 PostsをクリックしてPOSTを追加ボタンで、記事を追加する。
 
 ![Post](img/post.png)
+
+## URL追加
+
+```python:mysite/urls.py
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', include('blog.urls')),
+]
+```
+
+## blogのURL追加
+
+urls.pyファイルを作成
+
+```python:blog/urls.py
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('', views.post_list, name='post_list'),
+]
+```
+
+## View追加
+
+```python:blog/views.py
+from django.shortcuts import render
+
+def post_list(request):
+    return render(request, 'blog/post_list.html', {})
+```
+
+## テンプレート追加
+
+templatesフォルダとblogフォルダを追加する。
+```
+blog
+└───templates
+    └───blog
+```
+
+作成したblogフォルダにpost_list.htmlファイルを追加する。
+
+```html:blog/templates/blog/post_list.html
+<html>
+<body>
+    <p>Hello!</p>
+    <p>This is working.</p>
+</body>
+</html>
+```
+
+Webサーバー開始
+```
+(myvenv) ~$ python3 manage.py runserver
+```
+http://127.0.0.1:8000/
+
+ページが表示されました。
+
+## テンプレート内の動的データ
+
+```python:blog/views.py
+from django.shortcuts import render
+from django.utils import timezone
+from .models import Post
+
+def post_list(request):
+    posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
+    return render(request, 'blog/post_list.html', {'posts': posts})
+```
+
+## Djangoテンプレート
+
+```html:blog/templates/blog/post_list.html
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Django Startup Template</title>
+</head>
+<body>
+  <div>
+    <h1><a href="/">Django Startup Template</a></h1>
+  </div>
+
+  {% for post in posts %}
+    <div>
+      <p>published: {{ post.published_date }}</p>
+      <h2><a href="">{{ post.title }}</a></h2>
+      <p>{{ post.text|linebreaksbr }}</p>
+    </div>
+  {% endfor %}
+</body>
+</html>
+```
+
+管理サイトでPostをPublishします。
+
+Published dataを追記します。
+
+![Post](img/publish.png)
+
+Webサーバー開始
+```
+(myvenv) ~$ python3 manage.py runserver
+```
+http://127.0.0.1:8000/
+
+投稿した内容が表示されます。
 
