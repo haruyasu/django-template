@@ -46,6 +46,7 @@ Djangoをインストールする
 
 mysite/settings.pyに変更を加える
 
+mysite/settings.py
 ```python:mysite/settings.py
 ALLOWED_HOSTS = ['*']
 
@@ -102,6 +103,7 @@ Webサーバーを停止するには、Ctrl + Cを同時に押すと停止しま
 
 Djangoにアプリケーションを使えるように設定する
 
+mysite/settings.py
 ```python:mysite/settings.py
 # Application definition
 
@@ -150,6 +152,7 @@ class Post(models.Model):
 
 モデルをAdminページ(管理画面)上で見えるようにします。
 
+blog/admin.py
 ```python:blog/admin.py
 from django.contrib import admin
 from .models import Post
@@ -180,6 +183,7 @@ PostsをクリックしてPOSTを追加ボタンで、記事を追加する。
 
 ## URL追加
 
+mysite/urls.py
 ```python:mysite/urls.py
 from django.contrib import admin
 from django.urls import path, include
@@ -194,6 +198,7 @@ urlpatterns = [
 
 urls.pyファイルを作成
 
+blog/urls.py
 ```python:blog/urls.py
 from django.urls import path
 from . import views
@@ -205,6 +210,7 @@ urlpatterns = [
 
 ## View追加
 
+blog/views.py
 ```python:blog/views.py
 from django.shortcuts import render
 
@@ -223,6 +229,7 @@ blog
 
 作成したblogフォルダにpost_list.htmlファイルを追加する。
 
+blog/templates/blog/post_list.html
 ```html:blog/templates/blog/post_list.html
 <html>
 <body>
@@ -242,6 +249,7 @@ http://127.0.0.1:8000/
 
 ## テンプレート内の動的データ
 
+blog/views.py
 ```python:blog/views.py
 from django.shortcuts import render
 from django.utils import timezone
@@ -254,6 +262,7 @@ def post_list(request):
 
 ## Djangoテンプレート
 
+blog/templates/blog/post_list.html
 ```html:blog/templates/blog/post_list.html
 <!DOCTYPE html>
 <html lang="ja">
@@ -293,4 +302,47 @@ http://127.0.0.1:8000/
 投稿した内容が表示されます。
 
 ![Post](img/hello.png)
+
+## CSSでデザインをする
+
+blog.cssファイルを作成する
+
+```
+└── blog
+    └── static
+        └── css
+            └── blog.css
+```
+
+blog/templates/blog/post_list.html
+```html:blog/templates/blog/post_list.html
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Django Startup Template</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous" />
+  <link rel="stylesheet" href="{% static 'css/blog.css' %}" />
+</head>
+
+<body>
+  <div>
+    <h1><a href="/">Django Startup Template</a></h1>
+  </div>
+
+  {% for post in posts %}
+  <div>
+    <p>published: {{ post.published_date }}</p>
+    <h2><a href="">{{ post.title }}</a></h2>
+    <p>{{ post.text|linebreaksbr }}</p>
+  </div>
+  {% endfor %}
+</body>
+
+</html>
+```
 
