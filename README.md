@@ -1,26 +1,40 @@
+---
+description: description
+---
+
 # django Startup Template
 
 ## 仮想環境
 
+test
+
 仮想環境を作成する
 
-```
+
+
+```text
 $ python3 -m venv myvenv
 ```
+
 ### 仮想環境の開始
-```
+
+```text
 $ source myvenv/bin/activate
 ```
+
 Djanogのインストール
 
 pipを最新版にする
-```
+
+```text
 (myvenv) ~$ python3 -m pip install --upgrade pip
 ```
+
 ## requirementsファイルによってパッケージをインストールする
 
 requirements.txtを作成する
-```
+
+```text
 django-template
 ├── myvenv
 │   └── ...
@@ -28,17 +42,20 @@ django-template
 ```
 
 requirements.txt
-```
+
+```text
 Django~=2.2.4
 ```
 
 Djangoをインストールする
-```
+
+```text
 (myvenv) ~$ pip3 install -r requirements.txt
 ```
 
 ## プロジェクトを作成する
-```
+
+```text
 (myvenv) ~$ django-admin startproject mysite .
 ```
 
@@ -47,7 +64,8 @@ Djangoをインストールする
 mysite/settings.pyに変更を加える
 
 mysite/settings.py
-```python:mysite/settings.py
+
+```text
 ALLOWED_HOSTS = ['*']
 
 LANGUAGE_CODE = 'ja'
@@ -59,27 +77,30 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 ## データベースをセットアップ
 
-```
+```text
 (myvenv) ~$ python3 manage.py migrate
 ```
 
 ## Webサーバーを起動する
 
-```
+```text
 (myvenv) ~$ python3 manage.py runserver
 ```
+
 URLにアクセスすると、Webページが表示されます。  
-http://127.0.0.1:8000/
+[http://127.0.0.1:8000/](http://127.0.0.1:8000/)
 
 Webサーバーを停止するには、Ctrl + Cを同時に押すと停止します。
 
-![Django](img/first.png)
+![Django](.gitbook/assets/first.png)
 
 ## 新しいアプリケーションの作成
-```
+
+```text
 (myvenv) ~$ python3 manage.py startapp blog
 ```
-```
+
+```text
 ├── blog
 │   ├── admin.py
 │   ├── apps.py
@@ -104,7 +125,8 @@ Webサーバーを停止するには、Ctrl + Cを同時に押すと停止しま
 Djangoにアプリケーションを使えるように設定する
 
 mysite/settings.py
-```python:mysite/settings.py
+
+```text
 # Application definition
 
 INSTALLED_APPS = [
@@ -117,10 +139,12 @@ INSTALLED_APPS = [
     'blog.apps.BlogConfig',
 ]
 ```
+
 ## モデルの作成
 
 blog/models.py
-```python:blog/models.py
+
+```text
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
@@ -143,17 +167,18 @@ class Post(models.Model):
 
 ## データベースにモデルのためのテーブルを作成する
 
-```
+```text
 (myvenv) ~$ python3 manage.py makemigrations blog
 (myvenv) ~$ python3 manage.py migrate blog
 ```
 
 ## Django Admin
 
-モデルをAdminページ(管理画面)上で見えるようにします。
+モデルをAdminページ\(管理画面\)上で見えるようにします。
 
 blog/admin.py
-```python:blog/admin.py
+
+```text
 from django.contrib import admin
 from .models import Post
 
@@ -162,29 +187,32 @@ admin.site.register(Post)
 
 管理ユーザー作成
 
-```
+```text
 (myvenv) ~$ python3 manage.py createsuperuser
 ```
+
 ユーザー名、メールアドレス、パスワードを入力します。  
 パスワードは見えないので、間違えずに入力して下さい。
 
 Webサーバー開始
-```
+
+```text
 (myvenv) ~$ python3 manage.py runserver
 ```
 
 ユーザー名とパスワードを入力すると、ダッシュボードが見れます。
 
-![Admin](img/admin.png)
+![Admin](.gitbook/assets/admin.png)
 
 PostsをクリックしてPOSTを追加ボタンで、記事を追加する。
 
-![Post](img/post.png)
+![Post](.gitbook/assets/post.png)
 
 ## URL追加
 
 mysite/urls.py
-```python:mysite/urls.py
+
+```text
 from django.contrib import admin
 from django.urls import path, include
 
@@ -199,7 +227,8 @@ urlpatterns = [
 urls.pyファイルを作成
 
 blog/urls.py
-```python:blog/urls.py
+
+```text
 from django.urls import path
 from . import views
 
@@ -211,7 +240,8 @@ urlpatterns = [
 ## View追加
 
 blog/views.py
-```python:blog/views.py
+
+```text
 from django.shortcuts import render
 
 def post_list(request):
@@ -221,16 +251,18 @@ def post_list(request):
 ## テンプレート追加
 
 templatesフォルダとblogフォルダを追加する。
-```
+
+```text
 blog
 └───templates
     └───blog
 ```
 
-作成したblogフォルダにpost_list.htmlファイルを追加する。
+作成したblogフォルダにpost\_list.htmlファイルを追加する。
 
-blog/templates/blog/post_list.html
-```html:blog/templates/blog/post_list.html
+blog/templates/blog/post\_list.html
+
+```text
 <html>
 <body>
     <p>Hello!</p>
@@ -240,17 +272,20 @@ blog/templates/blog/post_list.html
 ```
 
 Webサーバー開始
-```
+
+```text
 (myvenv) ~$ python3 manage.py runserver
 ```
-http://127.0.0.1:8000/
+
+[http://127.0.0.1:8000/](http://127.0.0.1:8000/)
 
 ページが表示されました。
 
 ## テンプレート内の動的データ
 
 blog/views.py
-```python:blog/views.py
+
+```text
 from django.shortcuts import render
 from django.utils import timezone
 from .models import Post
@@ -262,8 +297,9 @@ def post_list(request):
 
 ## Djangoテンプレート
 
-blog/templates/blog/post_list.html
-```html:blog/templates/blog/post_list.html
+blog/templates/blog/post\_list.html
+
+```text
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -291,15 +327,17 @@ blog/templates/blog/post_list.html
 
 Published dataを追記します。
 
-![Post](img/publish.png)
+![Post](.gitbook/assets/publish.png)
 
 Webサーバー開始
-```
+
+```text
 (myvenv) ~$ python3 manage.py runserver
 ```
-http://127.0.0.1:8000/
+
+[http://127.0.0.1:8000/](http://127.0.0.1:8000/)
 
 投稿した内容が表示されます。
 
-![Post](img/hello.png)
+![Post](.gitbook/assets/hello.png)
 
