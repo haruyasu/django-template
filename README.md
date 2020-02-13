@@ -1,4 +1,4 @@
-# Django Startup Template
+# 1. ブログ構築
 
 はじめてのDjangoアプリ開発のチュートリアルです。
 
