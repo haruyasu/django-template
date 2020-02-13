@@ -1,4 +1,10 @@
-# django Startup Template
+# Django Startup Template
+
+はじめてのDjangoアプリ開発のチュートリアルです。
+
+すぐにDjangoを使ってアプリを作ってみたい方向けです。
+
+まずはブログを作ってみましょう。
 
 ## 仮想環境
 
@@ -7,7 +13,7 @@
 ```
 $ python3 -m venv myvenv
 ```
-### 仮想環境の開始
+## 仮想環境の開始
 ```
 $ source myvenv/bin/activate
 ```
