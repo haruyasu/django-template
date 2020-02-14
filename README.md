@@ -320,6 +320,69 @@ blog.cssファイルを作成する
             └── blog.css
 ```
 
+blog/static/css/blog.css
+```css:blog/static/css/blog.css
+* {
+  margin: 0;
+  padding: 0;
+}
+
+a:hover {
+  text-decoration: none;
+}
+
+.page-header {
+  background-color: #44b78b;
+  padding: 20px 20px 20px 40px;
+}
+
+.page-header h1,
+.page-header h1 a,
+.page-header h1 a:visited,
+.page-header h1 a:active {
+  color: #ffffff;
+  font-size: 36pt;
+  text-decoration: none;
+}
+
+.content {
+  margin-left: 40px;
+}
+
+.date {
+  color: #828282;
+}
+
+.save {
+  float: right;
+}
+
+.post-form textarea,
+.post-form input {
+  width: 100%;
+}
+
+.top-menu,
+.top-menu:hover,
+.top-menu:visited {
+  color: #ffffff;
+  float: right;
+  font-size: 26pt;
+  margin-right: 20px;
+}
+
+.post {
+  margin-bottom: 50px;
+  padding: 20px 20px 20px 40px;
+}
+
+.post h2 a,
+.post h2 a:visited {
+  color: #000000;
+}
+
+```
+
 blog/templates/blog/post_list.html
 ```html:blog/templates/blog/post_list.html
 {% load static %}
@@ -336,12 +399,12 @@ blog/templates/blog/post_list.html
 </head>
 
 <body>
-  <div>
-    <h1><a href="/">Django Startup Template</a></h1>
+  <div class="page-header">
+    <h1><a href="/">Blog - Django Startup</a></h1>
   </div>
 
   {% for post in posts %}
-  <div>
+  <div class="post">
     <p>published: {{ post.published_date }}</p>
     <h2><a href="">{{ post.title }}</a></h2>
     <p>{{ post.text|linebreaksbr }}</p>
@@ -351,4 +414,80 @@ blog/templates/blog/post_list.html
 
 </html>
 ```
+
+Webサイトを更新します。
+
+CSSが反映されました。
+
+![CSS](img/css.png)
+
+## テンプレートを拡張する
+
+HTMLの共通部分を取り出して、異なるページでも使えるようにします。
+こうすることで、同じことを書く必要がなくなります。
+
+base.htmlを作成する。
+```
+blog
+└───templates
+    └───blog
+        ├── base.html
+        └── post_list.html
+```
+
+blog/templates/blog/base.html
+```html:blog/templates/blog/base.html
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Django Startup Template</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous" />
+  <link rel="stylesheet" href="{% static 'css/blog.css' %}" />
+</head>
+
+<body>
+  <div class="page-header">
+    <h1><a href="/">Blog - Django Startup</a></h1>
+  </div>
+  <div class="content container">
+    <div class="row">
+        <div class="col-md-8">
+          {% block content %}
+          {% endblock %}
+        </div>
+    </div>
+  </div>
+</body>
+
+</html>
+```
+
+postの内容を```{% block content %}{% endblock %}```に置き換えました。
+内容が変わらない部分はbase.htmlに記載します。
+
+blog/templates/blog/post_list.html
+```html:blog/templates/blog/post_list.html
+{% extends 'blog/base.html' %}
+
+{% block content %}
+  {% for post in posts %}
+  <div class="post">
+    <p>published: {{ post.published_date }}</p>
+    <h2><a href="">{{ post.title }}</a></h2>
+    <p>{{ post.text|linebreaksbr }}</p>
+  </div>
+  {% endfor %}
+{% endblock %}
+```
+
+post_list.htmlには内容が変わる部分を記載します。
+
+```{% block content %}{% endblock %}```の間に入れます。
+
+先頭には```{% extends 'blog/base.html' %}```でテンプレートを拡張することを追記します。
 
