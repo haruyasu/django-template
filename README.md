@@ -470,7 +470,7 @@ blog/templates/blog/base.html
 </html>
 ```
 
-postの内容を{% block content %}{% endblock %}に置き換えました。
+postの内容を置き換えました。
 内容が変わらない部分はbase.htmlに記載します。
 
 blog/templates/blog/post_list.html
@@ -490,9 +490,7 @@ blog/templates/blog/post_list.html
 
 post_list.htmlには内容が変わる部分を記載します。
 
-{% block content %}{% endblock %}の間に入れます。
-
-先頭には{% extends 'blog/base.html' %}でテンプレートを拡張することを追記します。
+先頭にはテンプレートを拡張することを追記します。
 
 ## アプリケーションを拡張する
 
@@ -500,7 +498,7 @@ post_list.htmlには内容が変わる部分を記載します。
 
 ### 詳細へのリンクを作成する
 
-post_list.htmlの{{ post.title }}を変更しましょう。
+post_list.htmlを変更しましょう。
 
 blog/templates/blog/post_list.html
 ```html:blog/templates/blog/post_list.html
@@ -509,7 +507,7 @@ blog/templates/blog/post_list.html
 
 ### 投稿の詳細へのURLを作成する
 
-post/<int:pk>でURLのパターンを指定します。
+URLのパターンを指定します。
 
 blog/urls.py
 ```python:blog/urls.py
@@ -591,7 +589,7 @@ blog/templates/blog/base.html
 
 ### フォームのURLを追加
 
-```post/new/```のURLを追加します。
+post/new/のURLを追加します。
 
 blog/urls.py
 ```python:blog/urls.py
@@ -711,7 +709,7 @@ def post_edit(request, pk):
 
 ブログの投稿、編集はログインしている人だけにできるように変更しましょう。
 
-{% if user.is_authenticated %}{% endif %}で囲むことによってログインしている人だけに表示するように制限することができます。
+ログインしている人だけに表示するように制限することができます。
 
 blog/templates/blog/base.html
 ```html:blog/templates/blog/base.html
@@ -1137,8 +1135,6 @@ def comment_remove(request, pk):
 これで、コメントの承認と削除ができるようになりました。
 
 承認されたコメント数を表示する。
-
-{{ post.approved_comments.count }}に変更する。
 
 blog/templates/blog/post_list.html
 ```html:blog/templates/blog/post_list.html
