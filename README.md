@@ -470,7 +470,7 @@ blog/templates/blog/base.html
 </html>
 ```
 
-postの内容を```{% block content %}{% endblock %}```に置き換えました。
+postの内容を{% block content %}{% endblock %}に置き換えました。
 内容が変わらない部分はbase.htmlに記載します。
 
 blog/templates/blog/post_list.html
@@ -490,9 +490,9 @@ blog/templates/blog/post_list.html
 
 post_list.htmlには内容が変わる部分を記載します。
 
-```{% block content %}{% endblock %}```の間に入れます。
+{% block content %}{% endblock %}の間に入れます。
 
-先頭には```{% extends 'blog/base.html' %}```でテンプレートを拡張することを追記します。
+先頭には{% extends 'blog/base.html' %}でテンプレートを拡張することを追記します。
 
 ## アプリケーションを拡張する
 
@@ -500,7 +500,7 @@ post_list.htmlには内容が変わる部分を記載します。
 
 ### 詳細へのリンクを作成する
 
-post_list.htmlの```{{ post.title }}```を変更しましょう。
+post_list.htmlの{{ post.title }}を変更しましょう。
 
 blog/templates/blog/post_list.html
 ```html:blog/templates/blog/post_list.html
@@ -509,7 +509,7 @@ blog/templates/blog/post_list.html
 
 ### 投稿の詳細へのURLを作成する
 
-```post/<int:pk>```でURLのパターンを指定します。
+post/<int:pk>でURLのパターンを指定します。
 
 blog/urls.py
 ```python:blog/urls.py
@@ -521,7 +521,7 @@ urlpatterns = [
 
 ### 詳細のビューを追加する
 
-view.pyに```post_detail```関数を追加します。
+view.pyにpost_detail関数を追加します。
 
 blog/views.py
 ```python:blog/views.py
@@ -615,7 +615,7 @@ def post_new(request):
 
 ### フォームのテンプレートを追加
 
-```post_edit.html```ファイルを追加します。
+post_edit.htmlファイルを追加します。
 
 blog/templates/blog/post_edit.html
 ```html:blog/templates/blog/post_edit.html
@@ -711,7 +711,7 @@ def post_edit(request, pk):
 
 ブログの投稿、編集はログインしている人だけにできるように変更しましょう。
 
-```{% if user.is_authenticated %}{% endif %}```で囲むことによってログインしている人だけに表示するように制限することができます。
+{% if user.is_authenticated %}{% endif %}で囲むことによってログインしている人だけに表示するように制限することができます。
 
 blog/templates/blog/base.html
 ```html:blog/templates/blog/base.html
@@ -1138,7 +1138,7 @@ def comment_remove(request, pk):
 
 承認されたコメント数を表示する。
 
-```{{ post.approved_comments.count }}```に変更する。
+{{ post.approved_comments.count }}に変更する。
 
 blog/templates/blog/post_list.html
 ```html:blog/templates/blog/post_list.html
