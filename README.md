@@ -723,3 +723,123 @@ blog/templates/blog/post_detail.html
   <a class="btn btn-default" href="{% url 'post_edit' pk=post.pk %}">Edit</span></a>
 {% endif %}
 ```
+
+## 機能を追加
+
+## 下書き機能を追加
+
+今までは投稿するとすぐに公開されましたが、下書きに保存することができます。
+blog/views.pyのpost_new関数とpost_edit関数にあるpost.published_dateを削除します。
+
+blog/views.py
+```python:blog/views.py
+post.published_date = timezone.now()
+```
+
+base.htmlにDraftボタンを追加する。
+
+blog/templates/blog/base.html
+```html:blog/templates/blog/base.html
+<a href="{% url 'post_draft_list' %}" class="top-menu">Draft</a>
+```
+
+urls.pyにurlを追加する。
+
+blog/urls.py
+```python:blog/urls.py
+path('drafts/', views.post_draft_list, name='post_draft_list'),
+```
+
+下書き機能をビューに追加する。
+
+blog/views.py
+```python:blog/views.py
+def post_draft_list(request):
+  posts = Post.objects.filter(
+      published_date__isnull=True).order_by('created_date')
+  return render(request, 'blog/post_draft_list.html', {'posts': posts})
+```
+
+post_draft_list.htmlファイルを追加し、テンプレートを作成する。
+
+blog/templates/blog/post_draft_list.html
+```html:blog/templates/blog/post_draft_list.html
+{% extends 'blog/base.html' %}
+
+{% block content %}
+  {% for post in posts %}
+    <div class="post">
+      <p class="date">created: {{ post.created_date|date:'d-m-Y' }}</p>
+      <h1><a href="{% url 'post_detail' pk=post.pk %}">{{ post.title }}</a></h1>
+      <p>{{ post.text|truncatechars:200 }}</p>
+    </div>
+  {% endfor %}
+{% endblock %}
+```
+
+draftsページを開くと下書きが表示されます。
+
+http://127.0.0.1:8000/drafts/
+
+### 公開ボタンを追加
+
+blog/templates/blog/post_detail.html
+```html:blog/templates/blog/post_detail.html
+{% if post.published_date %}
+  <div class="date">
+    {{ post.published_date }}
+  </div>
+{% else %}
+    <a class="btn btn-default" href="{% url 'post_publish' pk=post.pk %}">Publish</a>
+{% endif %}
+```
+
+urls.pyにurlを追加する。
+
+blog/urls.py
+```python:blog/urls.py
+path('post/<pk>/publish/', views.post_publish, name='post_publish'),
+```
+
+ビューを追加する。
+
+blog/views.py
+```python:blog/views.py
+def post_publish(request, pk):
+  post = get_object_or_404(Post, pk=pk)
+  post.publish()
+  return redirect('post_detail', pk=pk)
+```
+
+## 削除機能を追加
+
+削除ボタンを追加する。
+
+編集ボタンの下に追加します。
+
+blog/templates/blog/post_detail.html
+```html:blog/templates/blog/post_detail.html
+<a class="btn btn-default" href="{% url 'post_remove' pk=post.pk %}">Delete</span></a>
+```
+
+urlも追加します。
+
+blog/urls.py
+```python:blog/urls.py
+path('post/<pk>/remove/', views.post_remove, name='post_remove'),
+```
+
+ビューも追加します。
+
+blog/views.py
+```python:blog/views.py
+def post_remove(request, pk):
+  post = get_object_or_404(Post, pk=pk)
+  post.delete()
+  return redirect('post_list')
+```
+
+投稿を削除できるようになりました。
+
+## セキュリティを強化する
+
