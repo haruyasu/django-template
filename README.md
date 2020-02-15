@@ -381,6 +381,9 @@ a:hover {
   color: #000000;
 }
 
+.comment {
+  margin: 20px 0px 20px 20px;
+}
 ```
 
 blog/templates/blog/post_list.html
@@ -842,4 +845,227 @@ def post_remove(request, pk):
 投稿を削除できるようになりました。
 
 ## セキュリティを強化する
+
+view.pyに追記します。
+
+blog/views.py
+```python:blog/views.py
+from django.contrib.auth.decorators import login_required
+```
+
+post_new, post_edit, post_draft_list, post_remove, post_publish関数の上にデコレーターを追記します。
+```python:blog/views.py
+@login_required
+def post_new(request):
+    [...]
+```
+
+### ユーザーログイン機能
+
+ログイン、ログアウト機能を実装します。
+
+mysite/urls.py
+```python:mysite/urls.py
+from django.contrib import admin
+from django.urls import path, include
+from django.contrib.auth import views
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('accounts/login/', views.LoginView.as_view(), name='login'),
+    path('accounts/logout/', views.LogoutView.as_view(next_page='/'), name='logout'),
+    path('', include('blog.urls')),
+]
+```
+
+blog/templates/registrationフォルダを作成し、login.htmlファイルを作成します。
+
+blog/templates/registration/login.html
+```html:blog/templates/registration/login.html
+{% extends "blog/base.html" %}
+
+{% block content %}
+  {% if form.errors %}
+    <p>Your username and password didn't match. Please try again.</p>
+  {% endif %}
+
+  <form method="post" action="{% url 'login' %}">
+  {% csrf_token %}
+    <table>
+    <tr>
+      <td>{{ form.username.label_tag }}</td>
+      <td>{{ form.username }}</td>
+    </tr>
+    <tr>
+      <td>{{ form.password.label_tag }}</td>
+      <td>{{ form.password }}</td>
+    </tr>
+    </table>
+
+    <input type="submit" value="login" />
+    <input type="hidden" name="next" value="{{ next }}" />
+  </form>
+{% endblock %}
+```
+
+mysite/settings.pyを変更します。
+
+下記のコードを一番下に追加します。
+
+mysite/settings.py
+```python:mysite/settings.py
+LOGIN_REDIRECT_URL = '/'
+```
+
+テンプレートを変更する
+
+blog/templates/blog/base.html
+```html:blog/templates/blog/base.html
+{% if user.is_authenticated %}
+  <a href="{% url 'post_new' %}" class="top-menu">Post</a>
+  <a href="{% url 'post_draft_list' %}" class="top-menu">Draft</a>
+  <p class="top-menu">Hello {{ user.username }} <small>(<a href="{% url 'logout' %}">Log out</a>)</small></p>
+{% else %}
+    <a href="{% url 'login' %}" class="top-menu">Login</span></a>
+{% endif %}
+```
+
+ログイン、ログアウト機能が実装されました。
+
+ログインして、投稿、編集、削除ボタンが表示されていることを確認してみて下さい。
+そして、ログアウトすると、投稿、編集、削除ボタンが表示されないと思います。
+
+## コメントを実装する
+
+### コメントモデルを実装する
+
+models.pyに追記します。
+
+blog/models.py
+```python:blog/models.py
+class Comment(models.Model):
+  post = models.ForeignKey(
+    'blog.Post', on_delete=models.CASCADE, related_name='comments')
+  author = models.CharField(max_length=200)
+  text = models.TextField()
+  created_date = models.DateTimeField(default=timezone.now)
+  approved_comment = models.BooleanField(default=False)
+
+  def approve(self):
+    self.approved_comment = True
+    self.save()
+
+  def __str__(self):
+    return self.text
+```
+
+### データベースにコメントモデルのテーブルを追加する
+
+```
+(myvenv) ~$ pthon3 manage.py makemigrations blog
+(myvenv) ~$ python3 manage.py migrate blog
+```
+### 管理画面にコメントモデルを登録する
+
+blog/admin.py
+```python:blog/admin.py
+from django.contrib import admin
+from .models import Post, Comment
+
+admin.site.register(Post)
+admin.site.register(Comment)
+```
+
+管理画面にアクセスするとコメントの追加や削除が出来るようになっています。
+
+http://127.0.0.1:8000/admin/blog/comment/
+
+### コメントを表示する
+
+最後の{% endblock %}の前に追記します。
+
+blog/templates/blog/post_detail.html
+```html:blog/templates/blog/post_detail.html
+<hr>
+{% for comment in post.comments.all %}
+  <div class="comment">
+    <div class="date">{{ comment.created_date }}</div>
+    <strong>{{ comment.author }}</strong>
+    <p>{{ comment.text|linebreaks }}</p>
+  </div>
+{% empty %}
+  <p>No comments here yet :(</p>
+{% endfor %}
+```
+
+### コメントを投稿する
+
+forms.pyファイルを変更する。
+
+blog/forms.py
+```python:blog/forms.py
+from django import forms
+from .models import Post, Comment
+
+class PostForm(forms.ModelForm):
+  class Meta:
+    model = Post
+    fields = ('title', 'text',)
+
+
+class CommentForm(forms.ModelForm):
+  class Meta:
+    model = Comment
+    fields = ('author', 'text',)
+
+```
+コメントを投稿するボタンを追加する。
+
+blog/templates/blog/post_detail.html
+```html:blog/templates/blog/post_detail.html
+<hr>
+<a class="btn btn-default" href="{% url 'add_comment_to_post' pk=post.pk %}">Add comment</a>
+{% for comment in post.comments.all %}
+```
+
+urls.pyにコメントのurlを追加する。
+
+blog/urls.py
+```python:blog/urls.py
+path('post/<int:pk>/comment/', views.add_comment_to_post, name='add_comment_to_post'),
+```
+
+ビューを追加する。
+
+blog/views.py
+```python:blog/views.py
+from .forms import PostForm, CommentForm
+
+def add_comment_to_post(request, pk):
+  post = get_object_or_404(Post, pk=pk)
+  if request.method == "POST":
+    form = CommentForm(request.POST)
+    if form.is_valid():
+      comment = form.save(commit=False)
+      comment.post = post
+      comment.save()
+      return redirect('post_detail', pk=post.pk)
+  else:
+    form = CommentForm()
+  return render(request, 'blog/add_comment_to_post.html', {'form': form})
+```
+
+
+blog/templates/blog/add_comment_to_post.html
+```html:blog/templates/blog/add_comment_to_post.html
+{% extends 'blog/base.html' %}
+
+{% block content %}
+  <h1>New comment</h1>
+  <form method="POST" class="post-form">{% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="save btn btn-default">Send</button>
+  </form>
+{% endblock %}
+```
 
