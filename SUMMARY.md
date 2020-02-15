@@ -1,4 +1,4 @@
 # Table of contents
 
-* [django Startup Template](README.md)
+* [1.Blog構築](README.md)
 

@@ -584,7 +584,7 @@ class PostForm(forms.ModelForm):
 blog/templates/blog/base.html
 ```html:blog/templates/blog/base.html
   <div class="page-header">
-    <a href="{% url 'post_new' %}" class="top-menu">post</span></a>
+    <a href="{% url 'post_new' %}" class="top-menu">post</a>
     <h1><a href="/">Blog - Django Startup</a></h1>
   </div>
 ```
@@ -667,7 +667,7 @@ blog/templates/blog/post_detail.html
     {{ post.published_date }}
   </div>
   {% endif %}
-  <a class="btn btn-default" href="{% url 'post_edit' pk=post.pk %}">Edit</span></a>
+  <a class="btn btn-default" href="{% url 'post_edit' pk=post.pk %}">Edit</a>
   <h2>{{ post.title }}</h2>
   <p>{{ post.text|linebreaksbr }}</p>
 </div>
@@ -723,7 +723,7 @@ blog/templates/blog/base.html
 blog/templates/blog/post_detail.html
 ```html:blog/templates/blog/post_detail.html
 {% if user.is_authenticated %}
-  <a class="btn btn-default" href="{% url 'post_edit' pk=post.pk %}">Edit</span></a>
+  <a class="btn btn-default" href="{% url 'post_edit' pk=post.pk %}">Edit</a>
 {% endif %}
 ```
 
@@ -822,7 +822,7 @@ def post_publish(request, pk):
 
 blog/templates/blog/post_detail.html
 ```html:blog/templates/blog/post_detail.html
-<a class="btn btn-default" href="{% url 'post_remove' pk=post.pk %}">Delete</span></a>
+<a class="btn btn-default" href="{% url 'post_remove' pk=post.pk %}">Delete</a>
 ```
 
 urlも追加します。
@@ -926,7 +926,7 @@ blog/templates/blog/base.html
   <a href="{% url 'post_draft_list' %}" class="top-menu">Draft</a>
   <p class="top-menu">Hello {{ user.username }} <small>(<a href="{% url 'logout' %}">Log out</a>)</small></p>
 {% else %}
-    <a href="{% url 'login' %}" class="top-menu">Login</span></a>
+    <a href="{% url 'login' %}" class="top-menu">Login</a>
 {% endif %}
 ```
 
@@ -998,6 +998,26 @@ blog/templates/blog/post_detail.html
 {% endfor %}
 ```
 
+投稿ページでコメントの数を表示する。
+
+blog/templates/blog/post_list.html
+```html:blog/templates/blog/post_list.html
+{% extends 'blog/base.html' %}
+
+{% block content %}
+  {% for post in posts %}
+  <div class="post">
+    <div class="date">
+        {{ post.published_date }}
+    </div>
+    <h1><a href="{% url 'post_detail' pk=post.pk %}">{{ post.title }}</a></h1>
+    <p>{{ post.text|linebreaksbr }}</p>
+    <a href="{% url 'post_detail' pk=post.pk %}">Comments: {{ post.comments.count }}</a>
+  </div>
+  {% endfor %}
+{% endblock %}
+```
+
 ### コメントを投稿する
 
 forms.pyファイルを変更する。
@@ -1055,6 +1075,7 @@ def add_comment_to_post(request, pk):
   return render(request, 'blog/add_comment_to_post.html', {'form': form})
 ```
 
+コメントを投稿するテンプレートを作成する。
 
 blog/templates/blog/add_comment_to_post.html
 ```html:blog/templates/blog/add_comment_to_post.html
@@ -1068,4 +1089,75 @@ blog/templates/blog/add_comment_to_post.html
   </form>
 {% endblock %}
 ```
+
+### コメントを管理する
+
+コメントを承認または削除できるようにします。
+
+RemoveボタンとApproveボタンを追加します。
+
+blog/templates/blog/post_detail.html
+```html:blog/templates/blog/post_detail.html
+<div class="date">
+  {{ comment.created_date }}
+  {% if not comment.approved_comment %}
+    <a class="btn btn-default" href="{% url 'comment_remove' pk=comment.pk %}">Remove</a>
+    <a class="btn btn-default" href="{% url 'comment_approve' pk=comment.pk %}">Approve</a>
+  {% endif %}
+</div>
+```
+
+urls.pyにurlを追加する。
+
+blog/urls.py
+```python:blog/urls.py
+  path('comment/<int:pk>/approve/', views.comment_approve, name='comment_approve'),
+  path('comment/<int:pk>/remove/', views.comment_remove, name='comment_remove'),
+```
+
+ビューを追加する。
+
+blog/views.py
+```python:blog/views.py
+from .models import Post, Comment
+
+@login_required
+def comment_approve(request, pk):
+  comment = get_object_or_404(Comment, pk=pk)
+  comment.approve()
+  return redirect('post_detail', pk=comment.post.pk)
+
+@login_required
+def comment_remove(request, pk):
+  comment = get_object_or_404(Comment, pk=pk)
+  comment.delete()
+  return redirect('post_detail', pk=comment.post.pk)
+```
+
+これで、コメントの承認と削除ができるようになりました。
+
+承認されたコメント数を表示する。
+
+```{{ post.approved_comments.count }}```に変更する。
+
+blog/templates/blog/post_list.html
+```html:blog/templates/blog/post_list.html
+<a href="{% url 'post_detail' pk=post.pk %}">Comments: {{ post.approved_comments.count }}</a>
+```
+
+モデルを追加する。
+
+Postモデルに追加する。
+
+blog/models.py
+```python:blog/models.py
+class Post(models.Model):
+
+  def approved_comments(self):
+    return self.comments.filter(approved_comment=True)
+```
+
+以上で、ブログアプリケーションの構築が完了です。
+
+## Herokuにデプロイする
 
