@@ -491,3 +491,235 @@ post_list.htmlには内容が変わる部分を記載します。
 
 先頭には```{% extends 'blog/base.html' %}```でテンプレートを拡張することを追記します。
 
+## アプリケーションを拡張する
+
+投稿の詳細ページを作成します。
+
+### 詳細へのリンクを作成する
+
+post_list.htmlの```{{ post.title }}```を変更しましょう。
+
+blog/templates/blog/post_list.html
+```html:blog/templates/blog/post_list.html
+<h2><a href="{% url 'post_detail' pk=post.pk %}">{{ post.title }}</a></h2>
+```
+
+### 投稿の詳細へのURLを作成する
+
+```post/<int:pk>```でURLのパターンを指定します。
+
+blog/urls.py
+```python:blog/urls.py
+urlpatterns = [
+    path('', views.post_list, name='post_list'),
+    path('post/<int:pk>/', views.post_detail, name='post_detail'),
+]
+```
+
+### 詳細のビューを追加する
+
+view.pyに```post_detail```関数を追加します。
+
+blog/views.py
+```python:blog/views.py
+from django.shortcuts import render, get_object_or_404
+
+def post_detail(request, pk):
+    post = get_object_or_404(Post, pk=pk)
+    return render(request, 'blog/post_detail.html', {'post': post})
+```
+
+### 詳細のテンプレートを追加する
+
+post_detail.htmlファイルを追加します。
+
+blog/templates/blog/post_detail.html
+```html:blog/templates/blog/post_detail.html
+{% extends 'blog/base.html' %}
+
+{% block content %}
+<div class="post">
+  {% if post.published_date %}
+  <div class="date">
+    {{ post.published_date }}
+  </div>
+  {% endif %}
+  <h2>{{ post.title }}</h2>
+  <p>{{ post.text|linebreaksbr }}</p>
+</div>
+{% endblock %}
+```
+
+投稿をクリックすると、詳細画面が表示されました。
+
+## フォームの作成
+
+フォームを作成して、Web上で記事を追加したり、編集したりします。
+
+forms.pyファイルを追加します。
+
+```
+blog
+   └── forms.py
+```
+
+blog/forms.py
+```python:blog/forms.py
+from django import forms
+from .models import Post
+
+class PostForm(forms.ModelForm):
+  class Meta:
+    model = Post
+    fields = ('title', 'text',)
+```
+
+### フォームへのページリンクを作成
+
+リンクを追加します。
+
+blog/templates/blog/base.html
+```html:blog/templates/blog/base.html
+  <div class="page-header">
+    <a href="{% url 'post_new' %}" class="top-menu">post</span></a>
+    <h1><a href="/">Blog - Django Startup</a></h1>
+  </div>
+```
+
+### フォームのURLを追加
+
+```post/new/```のURLを追加します。
+
+blog/urls.py
+```python:blog/urls.py
+urlpatterns = [
+    path('', views.post_list, name='post_list'),
+    path('post/<int:pk>/', views.post_detail, name='post_detail'),
+    path('post/new/', views.post_new, name='post_new'),
+]
+```
+
+### フォームのビューを追加
+
+blog/views.py
+```python:blog/views.py
+from .forms import PostForm
+
+def post_new(request):
+  form = PostForm()
+  return render(request, 'blog/post_edit.html', {'form': form})
+```
+
+### フォームのテンプレートを追加
+
+```post_edit.html```ファイルを追加します。
+
+blog/templates/blog/post_edit.html
+```html:blog/templates/blog/post_edit.html
+{% extends 'blog/base.html' %}
+
+{% block content %}
+  <h2>New post</h2>
+  <form method="POST" class="post-form">{% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="save btn btn-default">Save</button>
+  </form>
+{% endblock %}
+```
+
+### フォームを保存
+
+post_new関数を書き換えます。
+
+blog/views.py
+```python:blog/views.py
+from django.shortcuts import redirect
+
+def post_new(request):
+  if request.method == "POST":
+    form = PostForm(request.POST)
+    if form.is_valid():
+      post = form.save(commit=False)
+      post.author = request.user
+      post.published_date = timezone.now()
+      post.save()
+      return redirect('post_detail', pk=post.pk)
+  else:
+    form = PostForm()
+  return render(request, 'blog/post_edit.html', {'form': form})
+```
+
+### フォームの編集
+
+Editボタンを追加します。
+
+blog/templates/blog/post_detail.html
+```html:blog/templates/blog/post_detail.html
+{% extends 'blog/base.html' %}
+
+{% block content %}
+<div class="post">
+  {% if post.published_date %}
+  <div class="date">
+    {{ post.published_date }}
+  </div>
+  {% endif %}
+  <a class="btn btn-default" href="{% url 'post_edit' pk=post.pk %}">Edit</span></a>
+  <h2>{{ post.title }}</h2>
+  <p>{{ post.text|linebreaksbr }}</p>
+</div>
+{% endblock %}
+```
+
+editのリンクを追加します。
+
+blog/urls.py
+```python:blog/urls.py
+urlpatterns = [
+    path('', views.post_list, name='post_list'),
+    path('post/<int:pk>/', views.post_detail, name='post_detail'),
+    path('post/new/', views.post_new, name='post_new'),
+    path('post/<int:pk>/edit/', views.post_edit, name='post_edit'),
+]
+```
+
+ビューに追記します。
+
+blog/views.py
+```python:blog/views.py
+def post_edit(request, pk):
+  post = get_object_or_404(Post, pk=pk)
+  if request.method == "POST":
+    form = PostForm(request.POST, instance=post)
+    if form.is_valid():
+      post = form.save(commit=False)
+      post.author = request.user
+      post.published_date = timezone.now()
+      post.save()
+      return redirect('post_detail', pk=post.pk)
+  else:
+    form = PostForm(instance=post)
+  return render(request, 'blog/post_edit.html', {'form': form})
+```
+
+これで、ブログ投稿、編集ができるアプリケーションが完成しました。
+
+## セキュリティ対策
+
+ブログの投稿、編集はログインしている人だけにできるように変更しましょう。
+
+```{% if user.is_authenticated %}{% endif %}```で囲むことによってログインしている人だけに表示するように制限することができます。
+
+blog/templates/blog/base.html
+```html:blog/templates/blog/base.html
+{% if user.is_authenticated %}
+  <a href="{% url 'post_new' %}" class="top-menu">Post</i></a>
+{% endif %}
+```
+
+blog/templates/blog/post_detail.html
+```html:blog/templates/blog/post_detail.html
+{% if user.is_authenticated %}
+  <a class="btn btn-default" href="{% url 'post_edit' pk=post.pk %}">Edit</span></a>
+{% endif %}
+```
