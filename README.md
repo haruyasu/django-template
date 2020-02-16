@@ -4,7 +4,43 @@
 
 すぐにDjangoを使ってアプリを作ってみたい方向けです。
 
-まずはブログを作ってみましょう。
+最初は、ブログを作って、Djangoの機能を理解するのがオススメです。
+
+## GitHub準備
+
+GitHubのリポジトリを作成します。
+
+![GitHub](img/github.png)
+
+ローカルにリポジトリ名と同じフォルダを作成します。
+
+ローカルフォルダとGitHubのリポジトリを連携します。
+```
+echo "# django-blog" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git remote add origin https://github.com/haruyasu/django-blog.git
+git push -u origin master
+```
+※作成したリポジトリ名に変更する
+
+この時点でREADME.mdだけコミットされていると思います。
+
+### ignoreファイルを追加
+
+.gitignoreファイルを作成します。
+
+記述されたファイルは、git管理下から除外されてコミットされなくなります。
+
+.gitignore
+```
+myvenv
+db.sqlite3
+.vscode
+__pycache__
+*.pyc
+```
 
 ## 仮想環境
 
@@ -35,13 +71,27 @@ django-template
 
 requirements.txt
 ```
-Django~=2.2.4
+Django~=2.2
+django-heroku==0.3.1
+gunicorn==19.9.0
 ```
 
-Djangoをインストールする
+Djangoをインストールする。
+
+django-herokuはHerokuにデプロイする時に必要なパッケージです。
+
 ```
 (myvenv) ~$ pip3 install -r requirements.txt
 ```
+
+django-herokuをインストールすると、他のパッケージも複数同時にインストールされます。
+もし、psycopg2をインストールする時にエラーが発生した場合は、python3-devをインストールします。
+
+Linux(Ubuntu)の場合
+```
+sudo apt-get install python3-dev
+```
+※コマンドはOSによって変更する
 
 ## プロジェクトを作成する
 ```
@@ -1156,4 +1206,219 @@ class Post(models.Model):
 以上で、ブログアプリケーションの構築が完了です。
 
 ## Herokuにデプロイする
+
+デプロイとは、特定の環境下でアプリケーションやシステムを使えるようにすることです。
+
+Herokuにデプロイして、Webアプリケーションを世界中に公開しましょう。
+
+デプロイすることによって、多くの人にあなたのWebアプリケーションを使ってもらえるようになります。
+
+### デプロイ準備
+
+#### パッケージ定義
+
+freezeコマンドをすることによって、アプリを動かすためのパッケージを一覧にまとめることができます。
+
+```
+(myvenv) ~$ pip3 freeze > requirements.txt
+```
+
+このような内容になります。バージョンは実行時期によって異なります。
+
+requirements.txt
+```
+asgiref==3.2.3
+dj-database-url==0.5.0
+Django==2.2.10
+django-heroku==0.3.1
+gunicorn==19.9.0
+psycopg2==2.8.4
+pytz==2019.3
+sqlparse==0.3.0
+whitenoise==5.0.1
+```
+
+#### Procfile作成
+
+Procfileは、アプリのプロセスタイプやエントリーポイントを宣言するファイルです。
+
+Procfileを作成する。
+
+```
+django-template
+└── Procfile
+```
+
+Procfile
+```
+web: gunicorn mysite.wsgi
+```
+
+mysiteの部分はあなたが作成したアプリのディレクトリ名を指定します。
+
+gunicornと、HerokuでDjangoをデプロイするときに必要なWebサーバーです。
+
+#### runtime.txt作成
+
+runtime.txtにはプログラム実行時に必要なものを定義します。
+
+ここではPythonが必要なのでPythonのバージョンを指定します。
+
+runtime.txtを作成する。
+
+```
+django-template
+└── runtime.txt
+```
+
+runtime.txt
+```
+python-3.6.9
+```
+
+### Herokuを操作
+
+Herokuにデプロイする準備ができましたので、Herokuを操作していきます。
+
+#### Herokuアカウント作成
+
+まずはHerokuのアカウントを作成します。
+
+https://signup.heroku.com/
+
+#### Heroku CLIインストール
+
+OSに合わせてHeroku CLIをインストールします。
+
+インストールすることによって、コマンドラインからHerokuの操作が出来るようになります。
+
+https://devcenter.heroku.com/articles/getting-started-with-python#set-up
+
+#### Herokuにログイン
+
+ターミナルからHerokuにログインします。
+
+```
+$ heroku login
+```
+
+コマンドを実行すると、ログイン用のWebページが表示されますので、ログインボタンを押して下さい。
+
+![Heroku](img/heroku.png)
+
+#### Herokuプロジェクト作成
+
+Herokuにプロジェクトを作成します。
+
+好きなプロジェクト名を指定して下さい。
+
+このプロジェクト名がURLになりますので、既に他の人に使われているプロジェクト名は指定できません。
+
+```
+$ heroku create django-template-blog
+```
+
+このように表示されたら成功です。
+```
+Creating ⬢ django-template-blog... done
+https://django-template-blog.herokuapp.com/ | https://git.heroku.com/django-template-blog.git
+```
+
+#### Herokuにpushする
+
+Herokuにpushする前に、GitHubにすべてコミットしておいて下さい。
+
+```
+$ git push heroku master
+```
+
+デプロイ完了とメッセージが表示されます。
+```
+remote:        https://django-template-blog.herokuapp.com/ deployed to Heroku
+remote: 
+remote: Verifying deploy... done.
+To https://git.heroku.com/django-template-blog.git
+ * [new branch]      master -> master
+```
+
+#### プロセスを起動する
+
+このままだとgunicornのサーバーが起動していないため、アプリケーションが起動しません。
+
+以下のコマンドで起動します。
+
+```
+$ heroku ps:scale web=1
+```
+
+このように表示されたら成功です。
+```
+Scaling dynos... done, now running web at 1:Free
+```
+
+#### Herokuのデータベースを構築
+
+migrateコマンドをしてデータベースを構築します。
+
+```
+$ heroku run python manage.py migrate
+```
+
+このように表示されたら成功です。
+```
+Running python manage.py migrate on ⬢ django-template-blog... up, run.5146 (Free)
+Operations to perform:
+  Apply all migrations: admin, auth, blog, contenttypes, sessions
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying auth.0001_initial... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying blog.0001_initial... OK
+  Applying blog.0002_comment... OK
+  Applying sessions.0001_initial... OK
+```
+
+#### 管理ユーザーを作成
+
+ローカルと同じようにHerokuでも管理ユーザーを作成することができます。
+
+```
+$ heroku run python manage.py createsuperuser
+```
+
+ユーザー名、メールアドレス、パスワードを入力します。
+パスワードの入力は表示されませんので、間違えずに入力して下さい。
+```
+Running python manage.py createsuperuser on ⬢ django-template-blog... up, run.6023 (Free)
+ユーザー名:
+メールアドレス:
+Password: 
+Password (again): 
+Superuser created successfully.
+```
+
+これで無事デプロイ完了です。
+
+デプロイしたURLにアクセスしてみましょう。
+
+https://django-template-blog.herokuapp.com/
+
+ローカルと同じ画面が表示されているはずです。
+
+最初はデータがない初期状態なので、ブログを投稿してみましょう。
+
+
 
