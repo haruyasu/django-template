@@ -1484,6 +1484,60 @@ $ git push heroku master
 
 これで本番環境でデバッグ機能が無効になり、詳細な情報が表示されなくなりました。
 
-存在しない、URLを打ってみましょう。
+存在しないURLを打ってみましょう。
 
 Not Foundと表示されるはずです。
+
+![NotFound](img/notfound.png)
+
+ローカルで存在しないURLを打ってみると、詳細な情報が表示されます。
+
+![Debug](img/debug.png)
+
+### SECRET KEYがハードコーディングされている
+
+セキュリティ上、SECRET KEYを直接書くのは良くありません。
+
+先ほど作成した、local_settings.pyにSECRET_KEYを移動させましょう。
+
+mysite/local_settings.py
+```python:mysite/local_settings.py
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = 'xxxxxxxxxxxxxxxxxxxx'
+```
+
+settings.pyのSECRET_KEYは削除します。
+
+mysite/settings.py
+```python:mysite/settings.py
+# 削除
+SECRET_KEY = 'xxxxxxxxxxxxxxxxxxxx'
+
+if not DEBUG:
+    import django_heroku
+    django_heroku.settings(locals())
+    SECRET_KEY = os.environ['SECRET_KEY']
+```
+
+本番環境でSECRET_KEYを設定するには、heroku config:setコマンドを使います。
+
+実際のSECRET_KEYに置き換えて実行します。
+
+```
+$ heroku config:set SECRET_KEY="xxxx"
+```
+
+heroku configコマンドでHerokuの環境変数を見ることができます。
+
+```
+$ heroku config
+```
+SECRET_KEYが表示されていれば成功です。
+
+本番環境が動作するか確認しておきましょう。
+
+DjangoでWebアプリケーションの作成方法が分かったのではないでしょうか。
+
+ぜひ色々試して機能を追加して、さらに理解を深めていきましょう。
+
+以上
