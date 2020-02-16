@@ -1420,5 +1420,70 @@ https://django-template-blog.herokuapp.com/
 
 最初はデータがない初期状態なので、ブログを投稿してみましょう。
 
+## セキュリティを高める
 
+デプロイは成功しましたが、セキュリティ上の問題があります。
 
+### DebugをFalseにする
+
+現在、Debug機能が有効になっているため、もしエラーが発生した場合、詳細な情報が表示されてしまいます。
+
+ローカルではいいのですが、本番環境で詳細な情報は表示されたくありません。
+
+.gitignoreファイルに、local_settings.pyを追記します。
+
+.gitignore
+```
+local_settings.py
+```
+
+local_settings.pyファイルを作成します。
+
+ローカルのみDEBUG機能を有効にします。
+
+mysite/local_settings.py
+```python:mysite/local_settings.py
+import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
+}
+DEBUG = True
+```
+
+setting.pyを変更します。
+
+mysite/settings.py
+```python:mysite/settings.py
+# Falseに変更
+DEBUG = False
+
+# 追加
+try:
+    from .local_settings import *
+except ImportError:
+    pass
+
+# Debug=Falseの時だけ実行する設定
+if not DEBUG:
+    import django_heroku
+    django_heroku.settings(locals())
+```
+
+GitHubにコミットしておきます。
+
+Herokuにもpushします。
+
+```
+$ git push heroku master
+```
+
+これで本番環境でデバッグ機能が無効になり、詳細な情報が表示されなくなりました。
+
+存在しない、URLを打ってみましょう。
+
+Not Foundと表示されるはずです。
